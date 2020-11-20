@@ -7,16 +7,72 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+#Read in Data
 
+First we need to read in our data set
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r data set}
+getwd()
+winequality.red <- read.csv("~/GitHub/STAT6000Project/winequality-red.csv", sep=";")
+winequality.red
 
-```{r}
-d1=read.table("student-mat.csv",sep=";",header=TRUE,stringsAsFactors = TRUE)
-d2=read.table("student-por.csv",sep=";",header=TRUE,stringsAsFactors = TRUE)
-
-d3=merge(d1,d2,by=c("school","sex","age","address","famsize","Pstatus","Medu","Fedu","Mjob","Fjob","reason","nursery","internet"))
-print(nrow(d3)) # 382 students
 ```
+Now we need to make sure there are no empty values or missing values
+
+
+```{r fix data}
+summary(complete.cases(winequality.red))
+wine <- na.omit(winequality.red)
+
+
+```
+Doing this check shows us that we do not have any na values in our data 
+set.
+
+
+We also need to split the data into training and test sets
+
+```{r split data}
+
+```
+
+
+# - Madison
+
+
+```{r }
+
+
+```
+
+
+#LDA - Chung Ho
+
+
+
+```{r LDA}
+
+```
+
+#KNN - Mike
+
+
+
+
+```{r KNN}
+
+```
+
+
+
+#Random Forest - Shao-Wei
+
+```{r Random Forest}
+
+```
+
+
+
+
+
 
