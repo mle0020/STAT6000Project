@@ -22,19 +22,21 @@ Now we need to make sure there are no empty values or missing values
 
 ```{r fix data}
 summary(complete.cases(winequality.red))
-wine <- na.omit(winequality.red)
+winequality.red <- na.omit(winequality.red)
 
 
 ```
 Doing this check shows us that we do not have any na values in our data 
 set.
-
-
-We also need to split the data into training and test sets
-
-```{r split data}
+Now lets do some summary statistics and box plots of the response 
+value of quality
+```{r data check}
+summary(winequality.red)
+ggplot(data=winequality.red, mapping = aes(x=quality))+
+  geom_boxplot()
 
 ```
+
 
 
 # - Madison
