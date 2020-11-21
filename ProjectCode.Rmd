@@ -7,6 +7,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(ggplot2)
+```
 #Read in Data
 
 First we need to read in our data set
@@ -16,6 +19,8 @@ getwd()
 winequality.red <- read.csv("~/GitHub/STAT6000Project/winequality-red.csv", sep=";")
 winequality.red
 
+#I can't run the above code then I import data by another way
+winequality.red<-read.csv("winequality-red.csv",sep = ";")
 ```
 Now we need to make sure there are no empty values or missing values
 
@@ -24,16 +29,27 @@ Now we need to make sure there are no empty values or missing values
 summary(complete.cases(winequality.red))
 winequality.red <- na.omit(winequality.red)
 
+summary(complete.cases(winequality.red))# we only need this code for checking missing value, another line is for removing missing value
 
 ```
 Doing this check shows us that we do not have any na values in our data 
 set.
 Now lets do some summary statistics and box plots of the response 
 value of quality
+
 ```{r data check}
 summary(winequality.red)
 ggplot(data=winequality.red, mapping = aes(x=quality))+
   geom_boxplot()
+
+summary(winequality.red)
+str(winequality.red) #check variables structures
+winequality.red$quality.new<-rep(0,dim(winequality.red)[1])
+winequality.red$quality.new[winequality.red$quality>6.5]<-"1"
+winequality.red$quality.new<-as.factor(winequality.red$quality.new)
+table(winequality.red$quality.new)
+
+wine<-winequality.red[,c(1:11,13)] ###dataset for below steps###
 
 ```
 
