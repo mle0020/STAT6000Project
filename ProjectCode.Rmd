@@ -9,6 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r libraries}
 library(ggplot2)
+library(caret)
 library(tidyverse)
 library(ISLR)
 ```
@@ -80,8 +81,29 @@ k of 10. The code used to split the data can be found in the following section.
 ```{r k-fold cv} 
 #set the seed so we get the same groups each time
 set.seed(1)
-dim(winequality.red)/10
 
+#this section of code uses the r package caret to create 
+#10 folds of the numbers from 1 to 1599. So if you do not have
+#the caret package, you will need to install it. 
+
+flds <- createFolds(c(1:1599), k = 10, list = TRUE, returnTrain = FALSE)
+names(flds)[1] <- "train"
+
+#Once I created the folds of the numbers between 1 and 1599, I used these to 
+#pick the corresponding columns of the data frame. These can be used for 
+#all the following methods to calculate test error using the k-fold 
+#method of cross validation
+
+trainset <- winequality.red[flds$train,]
+fold2 <- winequality.red[flds$Fold02,]
+fold3 <- winequality.red[flds$Fold03,]
+fold4 <- winequality.red[flds$Fold04,]
+fold5 <- winequality.red[flds$Fold05,]
+fold6 <- winequality.red[flds$Fold06,]
+fold7 <- winequality.red[flds$Fold07,]
+fold8 <- winequality.red[flds$Fold08,]
+fold9 <- winequality.red[flds$Fold09,]
+fold10 <- winequality.red[flds$Fold10,]
 
 ```
 
@@ -104,7 +126,6 @@ dim(winequality.red)/10
 ```
 
 #KNN - Mike
-
 
 
 
