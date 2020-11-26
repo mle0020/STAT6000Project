@@ -7,58 +7,89 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r libraries}
 library(ggplot2)
+library(tidyverse)
+library(ISLR)
 ```
-#Read in Data
+
+
+#Get Data Ready
 
 First we need to read in our data set
 
 ```{r data set}
-getwd()
-winequality.red <- read.csv("~/GitHub/STAT6000Project/winequality-red.csv", sep=";")
-winequality.red
+#below is one way to read in the data
+#winequality.red <- read.csv("~/GitHub/STAT6000Project/winequality-red.csv", sep=";")
 
-#I can't run the above code then I import data by another way
+#This is another way to read in the data and the one that 
+#we will use for the project
 winequality.red<-read.csv("winequality-red.csv",sep = ";")
+winequality.red
 ```
+
 Now we need to make sure there are no empty values or missing values
 
 
 ```{r fix data}
 summary(complete.cases(winequality.red))
-winequality.red <- na.omit(winequality.red)
-
-summary(complete.cases(winequality.red))# we only need this code for checking missing value, another line is for removing missing value
-
 ```
 Doing this check shows us that we do not have any na values in our data 
 set.
-Now lets do some summary statistics and box plots of the response 
+Now lets do some summary statistics and plots of the response 
 value of quality
 
 ```{r data check}
 summary(winequality.red)
+#box plot of the data
 ggplot(data=winequality.red, mapping = aes(x=quality))+
   geom_boxplot()
+#bar graph of the data
+ggplot(data = winequality.red) + 
+  geom_bar(mapping = aes(x = quality))+
+  geom_vline(xintercept=mean(winequality.red$quality), color="purple")+
+  geom_vline(xintercept=median(winequality.red$quality), color="cyan")
 
-summary(winequality.red)
-str(winequality.red) #check variables structures
-winequality.red$quality.new<-rep(0,dim(winequality.red)[1])
-winequality.red$quality.new[winequality.red$quality>6.5]<-"1"
-winequality.red$quality.new<-as.factor(winequality.red$quality.new)
-table(winequality.red$quality.new)
+#Now we want to make a column we could potentially use for logistic regression
+logstuff<-rep("No",dim(winequality.red)[1])
+logstuff[winequality.red$quality>6.5]<-"Yes"
 
-wine<-winequality.red[,c(1:11,13)] ###dataset for below steps###
+#this adds the column to our data set
+winequality.red <- winequality.red %>%
+  mutate(
+    GoodWine = logstuff
+  )
+    
 
 ```
 
+#Cross Validation for Classification
+For classification problems, cross validation works similar to how it is used
+in linear regression. Instead of using MSE, we use the number of 
+misclassified observations to quantify test error. 
+
+Cross validation is a method that checks how well the model fits test data.
+It is used specifically when there is not a data set that is specifically used
+as test data. Cross Validation allows us to use portions of the training data
+as test data instead. 
+
+For this project, we need to test and build each method with the same 
+training and test data sets. We will use k-fold cross validation with a
+k of 10. The code used to split the data can be found in the following section.
+
+```{r k-fold cv} 
+#set the seed so we get the same groups each time
+set.seed(1)
+dim(winequality.red)/10
+
+
+```
 
 
 # - Madison
 
 
-```{r }
+```{r QDA}
 
 
 ```
