@@ -1,17 +1,21 @@
 ---
-title: "Stat6000Project"
-output: html_document
+title: "Stat6000 Project"
+output:
+  html_document:
+    highlight: tango
+    theme: spacelab
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r libraries}
+```{r libraries,message=FALSE,warning=FALSE}
 library(ggplot2)
 library(caret)
 library(tidyverse)
 library(ISLR)
+library(randomForest)
 ```
 
 
@@ -26,7 +30,7 @@ First we need to read in our data set
 #This is another way to read in the data and the one that 
 #we will use for the project
 winequality.red<-read.csv("winequality-red.csv",sep = ";")
-winequality.red
+head(winequality.red)
 ```
 
 Now we need to make sure there are no empty values or missing values
@@ -35,21 +39,33 @@ Now we need to make sure there are no empty values or missing values
 ```{r fix data}
 summary(complete.cases(winequality.red))
 ```
-Doing this check shows us that we do not have any na values in our data 
+Doing this check shows us that we do not have any missing values in our data 
 set.
 Now lets do some summary statistics and plots of the response 
-value of quality
+value of quality.
 
 ```{r data check}
 summary(winequality.red)
 #box plot of the data
-ggplot(data=winequality.red, mapping = aes(x=quality))+
-  geom_boxplot()
+ggplot(data=winequality.red, mapping = aes(y=quality))+
+  geom_boxplot()+scale_y_continuous("Quality")+theme_bw()
 #bar graph of the data
 ggplot(data = winequality.red) + 
   geom_bar(mapping = aes(x = quality))+
   geom_vline(xintercept=mean(winequality.red$quality), color="purple")+
-  geom_vline(xintercept=median(winequality.red$quality), color="cyan")
+  geom_vline(xintercept=median(winequality.red$quality), color="cyan")+theme_bw()
+
+winequality.red$Quality <- rep(0,dim(winequality.red)[1])
+winequality.red$Quality[winequality.red$quality>6.5] <- "1"
+winequality.red$Quality <- as.factor(winequality.red$Quality)
+wine<-winequality.red[,c(1:11,13)] ###dataset for below steps###
+head(wine)
+table(winequality.red$Quality)
+
+par(mfrow=c(2,3))
+for (v in 1:11) {
+  boxplot(wine[,v]~Quality,data = wine,ylab = colnames(wine)[v] )
+}
 
 #Now we want to make a column we could potentially use for logistic regression
 logstuff<-rep("No",dim(winequality.red)[1])
@@ -138,7 +154,72 @@ fold10 <- winequality.red[flds$Fold10,]
 #Random Forest - Shao-Wei
 
 ```{r Random Forest}
+same.data.rf.error<-data.frame(sample=rep(1:10,each=11),m=rep(1:11,times=10),error=NA)
+for (i in 1:10) {
+  split<-data.frame(flds[i])
+  split<-as.vector(split[,1])
+  test<-wine[split,]
+  y.test<-test[,12]
+  x.test<- test[,1:11]
+  train<-wine[-split,]
+  for (m in 1:11) {
+      RF<-randomForest(formula = Quality ~ ., data = train, xtest = x.test , ytest = y.test , ntree = 500, mtry=m)
+      same.data.rf.error[11*(i-1)+m,3]<-RF$test$err.rate[500,1]
+  }
+}
 
+#mean comparisonin in different m
+
+ave.rf.error<-data.frame(sample=rep("Average"),m=c(1:11),error=rep(NA,11))
+for (i in 1:11) {
+  ave.rf.error[i,3]<-mean(same.data.rf.error[same.data.rf.error$m==i,3])
+}
+rf.error<-rbind(same.data.rf.error,ave.rf.error)
+rf.error$sample<-as.factor(rf.error$sample)
+rf.error<-cbind(rf.error,average=c(rep(0,110),rep(1,11)))
+ggplot(rf.error,aes(x=m , y = error,color=sample,linetype=as.factor(average))) +
+  geom_line() + guides(linetype=FALSE) + theme_bw()
+
+### RF with m=4 ###
+accu<-matrix(NA,10,1)
+accu1<-matrix(NA,10,1)
+accu2<-matrix(NA,10,1)
+par(mfrow=c(2,5))
+for (i in 1:10) {
+  split<-data.frame(flds[i])
+  split<-as.vector(split[,1])
+  test<-wine[split,]
+  y.test<-test[,12]
+  x.test<- test[,1:11]
+  train<-wine[-split,]
+  RF<-randomForest(formula = Quality ~ ., data = train, xtest = x.test , ytest = y.test , ntree = 500, mtry=3)
+  accu[i,]<-sum(test[,12]==RF$test$predicted)/length(test[,12]) #overall accuracy
+  importance(RF)
+  varImpPlot(RF, sort = TRUE)
+}
+mean(accu)
+for (i in 1:10) {
+  split<-data.frame(flds[i])
+  split<-as.vector(split[,1])
+  test<-wine[split,]
+  y.test<-test[,12]
+  x.test<- test[,-c(9,12)]
+  train<-wine[-split,]
+  RF<-randomForest(formula = Quality ~ .-pH, data = train, xtest = x.test , ytest = y.test , ntree = 500, mtry=3)
+  accu1[i,]<-sum(test[,12]==RF$test$predicted)/length(test[,12]) #overall accuracy
+}
+mean(accu1)
+for (i in 1:10) {
+  split<-data.frame(flds[i])
+  split<-as.vector(split[,1])
+  test<-wine[split,]
+  y.test<-test[,12]
+  x.test<- test[,-c(6,12)]
+  train<-wine[-split,]
+  RF<-randomForest(formula = Quality ~ .-free.sulfur.dioxide, data = train, xtest = x.test , ytest = y.test , ntree = 500, mtry=3)
+  accu2[i,]<-sum(test[,12]==RF$test$predicted)/length(test[,12]) #overall accuracy
+}
+mean(accu2)
 ```
 
 
