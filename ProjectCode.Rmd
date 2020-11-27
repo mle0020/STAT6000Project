@@ -39,6 +39,7 @@ Now we need to make sure there are no empty values or missing values
 ```{r fix data}
 summary(complete.cases(winequality.red))
 ```
+
 Doing this check shows us that we do not have any missing values in our data 
 set.
 Now lets do some summary statistics and plots of the response 
@@ -49,19 +50,29 @@ summary(winequality.red)
 #box plot of the data
 ggplot(data=winequality.red, mapping = aes(y=quality))+
   geom_boxplot()+scale_y_continuous("Quality")+theme_bw()
+
 #bar graph of the data
 ggplot(data = winequality.red) + 
   geom_bar(mapping = aes(x = quality))+
   geom_vline(xintercept=mean(winequality.red$quality), color="purple")+
   geom_vline(xintercept=median(winequality.red$quality), color="cyan")+theme_bw()
+```
 
+From the data page, it points out that the wine is good if its quality is larger than 6.5, then we create a new factor variable which will be used for our model response, if `quality` is bigger than 6.5, it is equal to 1, otherwise, it is 0.
+Moreover, we notice that the number of "bad" red wine is much more than the good ones, and it might influence our experiment.
+
+```{r}
 winequality.red$Quality <- rep(0,dim(winequality.red)[1])
 winequality.red$Quality[winequality.red$quality>6.5] <- "1"
 winequality.red$Quality <- as.factor(winequality.red$Quality)
 wine<-winequality.red[,c(1:11,13)] ###dataset for below steps###
 head(wine)
 table(winequality.red$Quality)
+```
 
+Also, we create the boxplot of each predictor and check the difference between quality 0 and 1 in each variable. Except for `residual.sugar`, `chlorides`, `free.sulfur.dioxide`, and `PH`, there are obvious different between "good" and "bad" wines. In addition, the box-plots show that there are a lot of outliers in different predictors, and it could be the reason of misclassification.
+
+```{r}
 par(mfrow=c(2,3))
 for (v in 1:11) {
   boxplot(wine[,v]~Quality,data = wine,ylab = colnames(wine)[v] )
@@ -153,6 +164,22 @@ fold10 <- winequality.red[flds$Fold10,]
 
 #Random Forest - Shao-Wei
 
+First of all, we randomly select one of testing and training set to check the scale of the forest. It shows that the curve is gradually being stable after 200 trees from the below plot. Thus, the number of trees is 200 for later steps.
+
+```{r}
+  split<-data.frame(flds[1])
+  split<-as.vector(split[,1])
+  test<-wine[split,]
+  y.test<-test[,12]
+  x.test<- test[,1:11]
+  train<-wine[-split,]
+  RF<-randomForest(formula = Quality ~ ., data = train, xtest = x.test , ytest = y.test , ntree = 1000, mtry=round(sqrt(ncol(x.test))))
+  plot(RF)
+```
+
+The number of m in each split is an important part to get influence to our test error. In order to reduce test error, we build the random forest by different m in each testing and training set, so there are totally 110 forests and 10 of each m, and then we compute the average error of each m.
+Each line is the test error from different testing and training set, and the dashed line is their average. Although the graph indicate that m=6 is the better parameter, each tree could be more correlated as larger m is. Thus, m=4 which is close to the square root of the predictors 13 is our decision.
+
 ```{r Random Forest}
 same.data.rf.error<-data.frame(sample=rep(1:10,each=11),m=rep(1:11,times=10),error=NA)
 for (i in 1:10) {
@@ -163,8 +190,8 @@ for (i in 1:10) {
   x.test<- test[,1:11]
   train<-wine[-split,]
   for (m in 1:11) {
-      RF<-randomForest(formula = Quality ~ ., data = train, xtest = x.test , ytest = y.test , ntree = 500, mtry=m)
-      same.data.rf.error[11*(i-1)+m,3]<-RF$test$err.rate[500,1]
+      RF<-randomForest(formula = Quality ~ ., data = train, xtest = x.test , ytest = y.test , ntree = 200, mtry=m)
+      same.data.rf.error[11*(i-1)+m,3]<-RF$test$err.rate[200,1]
   }
 }
 
@@ -180,10 +207,16 @@ rf.error<-cbind(rf.error,average=c(rep(0,110),rep(1,11)))
 ggplot(rf.error,aes(x=m , y = error,color=sample,linetype=as.factor(average))) +
   geom_line() + guides(linetype=FALSE) + theme_bw()
 
-### RF with m=4 ###
+```
+
+Now, we build the forests again with m=4 and ntree=200 for each subsets, and compute the accuracy ((True Positive+True Negative)/Total) and the average accuracy. Moreover, the accuracy might be increased by removing some strongly uncorrelated predictors, and by checking the importance, we notice that `PH` and `free.sulfur.dioxide` are relatively less importance. Hence, we try to build the model without them and compute their accuracy. From the result, the model with all predictors is $0.9155464$; The model without `pH` is $0.9205621$;The model without `pH, free.sulfur.dioxide` is $0.9193042$; and The model without `free.sulfur.dioxide` is $0.9180503$. Thus, the forest without `pH` can slighly increase the accuracy and it's our final model.
+
+```{r}
+###RF with m=4###
 accu<-matrix(NA,10,1)
 accu1<-matrix(NA,10,1)
 accu2<-matrix(NA,10,1)
+accu3<-matrix(NA,10,1)
 par(mfrow=c(2,5))
 for (i in 1:10) {
   split<-data.frame(flds[i])
@@ -192,7 +225,7 @@ for (i in 1:10) {
   y.test<-test[,12]
   x.test<- test[,1:11]
   train<-wine[-split,]
-  RF<-randomForest(formula = Quality ~ ., data = train, xtest = x.test , ytest = y.test , ntree = 500, mtry=3)
+  RF<-randomForest(formula = Quality ~ ., data = train, xtest = x.test , ytest = y.test , ntree = 200, mtry=4)
   accu[i,]<-sum(test[,12]==RF$test$predicted)/length(test[,12]) #overall accuracy
   importance(RF)
   varImpPlot(RF, sort = TRUE)
@@ -205,7 +238,7 @@ for (i in 1:10) {
   y.test<-test[,12]
   x.test<- test[,-c(9,12)]
   train<-wine[-split,]
-  RF<-randomForest(formula = Quality ~ .-pH, data = train, xtest = x.test , ytest = y.test , ntree = 500, mtry=3)
+  RF<-randomForest(formula = Quality ~ .-pH, data = train, xtest = x.test , ytest = y.test , ntree = 200, mtry=3)
   accu1[i,]<-sum(test[,12]==RF$test$predicted)/length(test[,12]) #overall accuracy
 }
 mean(accu1)
@@ -214,12 +247,23 @@ for (i in 1:10) {
   split<-as.vector(split[,1])
   test<-wine[split,]
   y.test<-test[,12]
-  x.test<- test[,-c(6,12)]
+  x.test<- test[,-c(6,9,12)]
   train<-wine[-split,]
-  RF<-randomForest(formula = Quality ~ .-free.sulfur.dioxide, data = train, xtest = x.test , ytest = y.test , ntree = 500, mtry=3)
+  RF<-randomForest(formula = Quality ~ .-pH-free.sulfur.dioxide, data = train, xtest = x.test , ytest = y.test , ntree = 200, mtry=3)
   accu2[i,]<-sum(test[,12]==RF$test$predicted)/length(test[,12]) #overall accuracy
 }
 mean(accu2)
+for (i in 1:10) {
+  split<-data.frame(flds[i])
+  split<-as.vector(split[,1])
+  test<-wine[split,]
+  y.test<-test[,12]
+  x.test<- test[,-c(6,12)]
+  train<-wine[-split,]
+  RF<-randomForest(formula = Quality ~ .-free.sulfur.dioxide, data = train, xtest = x.test , ytest = y.test , ntree = 500, mtry=3)
+  accu3[i,]<-sum(test[,12]==RF$test$predicted)/length(test[,12]) #overall accuracy
+}
+mean(accu3)
 ```
 
 
