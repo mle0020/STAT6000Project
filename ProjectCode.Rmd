@@ -157,7 +157,10 @@ fold10 <- winequality.red[flds$Fold10,]
 
 
 ```{r KNN}
-
+train = winequality.red[trainset,]
+test= winequality.red[-trainset,]
+train_target= winequality.red[1:1599,12]
+knn.pred=knn(train,test,train_target,k=10)
 ```
 
 
