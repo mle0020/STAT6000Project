@@ -47,9 +47,6 @@ value of quality.
 
 ```{r data check}
 summary(winequality.red)
-#box plot of the data
-ggplot(data=winequality.red, mapping = aes(y=quality))+
-  geom_boxplot()+scale_y_continuous("Quality")+theme_bw()
 
 #bar graph of the data
 ggplot(data = winequality.red) + 
@@ -70,13 +67,14 @@ head(wine)
 table(winequality.red$Quality)
 ```
 
-Also, we create the boxplot of each predictor and check the difference between quality 0 and 1 in each variable. Except for `residual.sugar`, `chlorides`, `free.sulfur.dioxide`, and `PH`, there are obvious different between "good" and "bad" wines. In addition, the box-plots show that there are a lot of outliers in different predictors, and it could be the reason of misclassification.
+Also, we will create a boxplot of each predictor and check the difference between 
+good quality wine (Yes)and bad quality wine (No) for each variable. 
+Except for `residual.sugar`, `chlorides`, `free.sulfur.dioxide`, and `PH`, 
+there are obvious differences between "good" and "bad" wines. 
+In addition, the box-plots show that there are a lot of outliers 
+in different predictors, and it could be the reason for misclassification.
 
 ```{r}
-par(mfrow=c(2,3))
-for (v in 1:11) {
-  boxplot(wine[,v]~Quality,data = wine,ylab = colnames(wine)[v] )
-}
 
 #Now we want to make a column we could potentially use for logistic regression
 logstuff<-rep("No",dim(winequality.red)[1])
@@ -87,8 +85,13 @@ winequality.red <- winequality.red %>%
   mutate(
     GoodWine = logstuff
   )
-    
-
+winequality.red$GoodWine <- as.factor(winequality.red$GoodWine)
+  
+par(mfrow=c(2,3))
+for (v in 1:11) {
+  boxplot(winequality.red[,v]~GoodWine,data = winequality.red,
+          ylab = colnames(winequality.red)[v] )
+}
 ```
 
 #Cross Validation for Classification
@@ -121,7 +124,7 @@ names(flds)[1] <- "train"
 #all the following methods to calculate test error using the k-fold 
 #method of cross validation
 
-trainset <- winequality.red[flds$train,]
+fold1 <- winequality.red[flds$train,]
 fold2 <- winequality.red[flds$Fold02,]
 fold3 <- winequality.red[flds$Fold03,]
 fold4 <- winequality.red[flds$Fold04,]
