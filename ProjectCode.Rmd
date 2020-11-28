@@ -162,8 +162,8 @@ fold10 <- winequality.red[flds$Fold10,]
 ```{r KNN}
 #Use the same trainset from above in order to maintain consistency.
 #Split the data into train and test to allow for kNN approach.
-train <- winequality.red[trainset,]
-test <- winequality.red[-trainset,]
+train <- winequality.red[fold1,]
+test <- winequality.red[-fold1,]
 
 #Standardize Data
 process <- preProcess(train, method=c("center","scale"))
