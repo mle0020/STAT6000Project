@@ -157,10 +157,27 @@ fold10 <- winequality.red[flds$Fold10,]
 
 
 ```{r KNN}
+#Use the same trainset from above in order to maintain consistency.
+#Split the data into train and test to allow for kNN approach.
 train <- winequality.red[trainset,]
 test <- winequality.red[-trainset,]
-train_target <- winequality.red[1:1599,12]
-knn.pred <- knn(train,test,train_target,k=10)
+
+#Standardize Data
+process <- preProcess(train, method=c("center","scale"))
+train_s <- predict(process,train)
+test_s <- predict(process,test)
+
+#Data Processing
+wineTrain <- train_s[,-12]
+wineTest <- test_s[,-12]
+trainLabel <- train_s[,12,drop=TRUE]
+testLabel <- test_s[,12,drop=TRUE]
+
+#Perform the kNN model
+knn.pred <- knn(wineTrain,wineTest,trainLabel,k=39)
+
+#Evaluate Model
+confusionMatrix(testLabel,knn.pred)
 ```
 
 
