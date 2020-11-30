@@ -238,6 +238,7 @@ mean( wine.pred$class == test.wine$quality )
 #Use the same trainset from above in order to maintain consistency.
 #Split the data into train and test to allow for kNN approach.
 #Perform kNN model with k=39 because 39 is sqrt of 1599 (typical approach to use k=sqrt(n)).
+errors = NULL
 for (i in 1:10) {
   split <- data.frame(flds[i])
   split <- as.vector(split[,1])
