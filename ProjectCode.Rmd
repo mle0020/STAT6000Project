@@ -19,6 +19,7 @@ library(randomForest)
 library(class)
 library(e1071)
 library(MASS)
+library(caTools)
 ```
 
 
@@ -56,7 +57,6 @@ ggplot(data = winequality.red) +
   geom_bar(mapping = aes(x = quality))+
   geom_vline(xintercept=mean(winequality.red$quality), color="purple")+
   geom_vline(xintercept=median(winequality.red$quality), color="cyan")+theme_bw()
-
 
 
 ```
@@ -143,20 +143,33 @@ of k-fold cross validation. Using a k = 10, we will fit the method
 
 
 ```{r QDA}
+#We need to initialize the structures that we will use to store things
 testerror = NULL
 training = NULL
 i = 1
 
+#We need to use a loop to do the QDA analysis 10 times. 
 while(i <11){
+  #this line selects the test fold
   testdata = folds[[i]]
+  #this line puts the rest of the folds in a list of lists
   traindata = folds[-i]
+  #this line changes the list of lists into a data frame
   training = dplyr::bind_rows(traindata)
-  qda.fit = qda(quality~. -Quality, data=training)
+  #this line fits the qda method to the data. Everything but the original 
+  #quality are used as responses. We are predicting the quality based on 
+  #the 0 and 1 method. It is also only fit on the training observations
+  qda.fit = qda(Quality~. -quality, data=training)
+  #This line uses the built in predict function to figure out what
+  #our model would predict for the test data.
   qda.predict = predict(qda.fit, testdata)$class
-  testerror[i]= mean(qda.predict == testdata$quality)
+  #this line calculates the average misclassification rate of each iteration
+  testerror[i]= mean(qda.predict != testdata$Quality)
+  #this is the iterator so we can move through the loop
   i = i +1
 }
 
+#this averages the test errors from the loop to find the overall test error
 kfoldtesterror = mean(testerror)
 kfoldtesterror
 
@@ -250,6 +263,7 @@ for (i in 1:10) {
 }
 #Test model performance using test error.
 knn.test_error <- mean(errors)
+knn.test_error
 
 ```
 
