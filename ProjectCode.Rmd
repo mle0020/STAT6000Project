@@ -237,27 +237,20 @@ mean( wine.pred$class == test.wine$quality )
 ```{r KNN}
 #Use the same trainset from above in order to maintain consistency.
 #Split the data into train and test to allow for kNN approach.
-split <- data.frame(flds[1])
-split <- as.vector(split[,1])
-test <- wine[split,]
-train <- wine[-split,]
+#Perform kNN model with k=39 because 39 is sqrt of 1599 (typical approach to use k=sqrt(n)).
+for (i in 1:10) {
+  split <- data.frame(flds[i])
+  split <- as.vector(split[,1])
+  test <- wine[split,]
+  train <- wine[-split,]
+  wineTrain_Target <- train[,12]
+  knn.pred <- knn(train,test,wineTrain_Target,k=39)
+  errors <- mean(knn.pred$class == test$quality
+}
 
-#Standardize Data
-process <- preProcess(train, method=c("center","scale"))
-train_s <- predict(process,train)
-test_s <- predict(process,test)
+#Test model performance using test error.
+test_error = mean(errors)
 
-#Data Processing
-wineTrain <- train_s[,-12]
-wineTest <- test_s[,-12]
-trainLabel <- train_s[,12,drop=TRUE]
-testLabel <- test_s[,12,drop=TRUE]
-
-#Perform the kNN model
-knn.pred <- knn(wineTrain,wineTest,trainLabel,k=39)
-
-#Evaluate Model
-confusionMatrix(testLabel,knn.pred)
 ```
 
 
