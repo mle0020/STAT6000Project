@@ -16,6 +16,7 @@ library(caret)
 library(tidyverse)
 library(ISLR)
 library(randomForest)
+library(class)
 ```
 
 
@@ -139,9 +140,14 @@ fold10 <- winequality.red[flds$Fold10,]
 
 
 # - Madison
+In this section, we will use the Quadratic Discriminant Analysis 
+classification method. We will be doing it with the resampling method
+of k-fold cross validation. Using a k = 10, we will fit the method 
+10 different times in order to get a test error. 
 
 
 ```{r QDA}
+
 
 
 ```
