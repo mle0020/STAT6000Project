@@ -158,7 +158,66 @@ of k-fold cross validation. Using a k = 10, we will fit the method
 
 
 ```{r LDA}
+install.packages("tidyverse", dependencies = TRUE)
+install.packages('caTools')
+install.packages('caret')
 
+library(tidyverse)
+library(caTools)
+library(ggplot2)
+library(MASS)
+library(ISLR)
+library(caret)
+
+#import the csv
+
+head(winequality.red)
+summary(winequality.red)
+summary(is.na(winequality.red))
+
+
+winequality.red$Quality <- rep(0,dim(winequality.red)[1])
+winequality.red$Quality[winequality.red$quality>6.5] <- "1"
+winequality.red$Quality <- as.factor(winequality.red$Quality)
+wine<-winequality.red[,c(1:11,13)] ###dataset for below steps###
+head(wine)
+table(winequality.red$Quality)
+
+# split the data into training set and testing set 
+set.seed(1)
+flds <- createFolds(c(1:1599), k = 10, list = TRUE, returnTrain = FALSE)
+names(flds)[1] <- "train"
+
+fold1 <- winequality.red[flds$train,]
+fold2 <- winequality.red[flds$Fold02,]
+fold3 <- winequality.red[flds$Fold03,]
+fold4 <- winequality.red[flds$Fold04,]
+fold5 <- winequality.red[flds$Fold05,]
+fold6 <- winequality.red[flds$Fold06,]
+fold7 <- winequality.red[flds$Fold07,]
+fold8 <- winequality.red[flds$Fold08,]
+fold9 <- winequality.red[flds$Fold09,]
+fold10 <- winequality.red[flds$Fold10,]
+
+split <- data.frame(flds[1])
+split <- as.vector(split[,1])
+wine.test <- wine[split,]
+wine.train <- wine[-split,]
+
+# LDA using train data
+wine.model <- lda(Quality~., data = wine.train)
+wine.model
+lda.pred <- predict(wine.model, wine.test)
+
+plot(wine.model)
+
+# Visualization
+lda.data <- cbind(wine.train, predict(wine.model)$x)
+ggplot(lda.data, aes(LD1, LD2)) + geom_point(aes(color = Quality)) + scale_color_gradientn(colours = rainbow(6))
+
+# Prediction using LDA model
+wine.pred <- wine.model %>% predict(test.wine)
+mean( wine.pred$class == test.wine$quality )
 ```
 
 #KNN - Mike
