@@ -246,11 +246,10 @@ for (i in 1:10) {
   train <- wine[-split,]
   wineTrain_Target <- train[,12]
   knn.pred <- knn(train,test,wineTrain_Target,k=39)
-  errors <- mean(knn.pred$class != test$Quality)
+  errors[i] <- mean(knn.pred != test$Quality)
 }
-
 #Test model performance using test error.
-test_error = mean(errors)
+test_error <- mean(errors)
 
 ```
 
