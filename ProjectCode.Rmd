@@ -206,7 +206,7 @@ mean( wine.pred$class == wine.test$Quality )
 ```{r KNN}
 #Use the same trainset from above in order to maintain consistency.
 #Split the data into train and test to allow for kNN approach.
-#Perform kNN model with k=39 because 39 is sqrt of 1599 (typical approach to use k=sqrt(n)).
+#Perform kNN model with k=39 because 39 is sqrt of 1599 (typical approach to use k=sqrt(n)). 
 errors = NULL
 for (i in 1:10) {
   split <- data.frame(flds[i])
@@ -214,13 +214,59 @@ for (i in 1:10) {
   test <- wine[split,]
   train <- wine[-split,]
   wineTrain_Target <- train[,12]
-  knn.pred <- knn(train,test,wineTrain_Target,k=39)
-  errors[i] <- mean(knn.pred != test$Quality)
+  knn.pred1 <- knn(train,test,wineTrain_Target,k=39)
+  #Compute test errors for all folds.
+  errors[i] <- mean(knn.pred1 != test$Quality)
 }
-#Test model performance using test error.
-knn.test_error <- mean(errors)
-knn.test_error
 
+#Create a table to show actual vs predicted
+table(knn.pred1,test$Quality)
+#Compute mean test error.
+knn.test_error <- mean(errors)
+
+#Perform kNN again, with k=5 this time.
+errors2 = NULL
+for (i in 1:10) {
+  split <- data.frame(flds[i])
+  split <- as.vector(split[,1])
+  test <- wine[split,]
+  train <- wine[-split,]
+  wineTrain_Target <- train[,12]
+  knn.pred2 <- knn(train,test,wineTrain_Target,k=5)
+  #Compute errors across all folds.
+  errors2[i] <- mean(knn.pred2 != test$Quality)
+}
+
+#Create a table to show actual vs predicted
+table(knn.pred2,test$Quality)
+#Compute mean test error.
+knn.test_error2 <- mean(errors2)
+
+#Perform kNN with k=10
+errors3 = NULL
+for (i in 1:10) {
+  split <- data.frame(flds[i])
+  split <- as.vector(split[,1])
+  test <- wine[split,]
+  train <- wine[-split,]
+  wineTrain_Target <- train[,12]
+  knn.pred3 <- knn(train,test,wineTrain_Target,k=10)
+  #Compute errors across folds.
+  errors3[i] <- mean(knn.pred3 != test$Quality)
+}
+
+#Create a table to show actual vs predicted
+table(knn.pred3,test$Quality)
+#Compute mean test error.
+knn.test_error3 <- mean(errors3)
+
+#Plot the errors of each of the kNN models with different k values
+plot(errors,col="blue")
+lines(errors,col="blue")
+points(errors2,col="red")
+lines(errors2,col="red")
+points(errors3,col="green")
+lines(errors3,col="green")
 ```
 
 
