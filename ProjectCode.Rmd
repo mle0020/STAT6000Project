@@ -171,7 +171,8 @@ while(i <11){
 
 #this averages the test errors from the loop to find the overall test error
 kfoldtesterror = mean(testerror)
-kfoldtesterror
+print("Average error of the QDA method using 10-fold cross validation is")
+format(kfoldtesterror)
 
 ```
 
