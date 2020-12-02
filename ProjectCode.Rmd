@@ -160,6 +160,10 @@ while(i <11){
   #quality are used as responses. We are predicting the quality based on 
   #the 0 and 1 method. It is also only fit on the training observations
   qda.fit = qda(Quality~. -quality, data=training)
+  print(paste0("QDA model for Test Set ",i))
+  print(qda.fit)
+  cat("\n")
+  cat("\n")
   #This line uses the built in predict function to figure out what
   #our model would predict for the test data.
   qda.predict = predict(qda.fit, testdata)$class
@@ -171,8 +175,9 @@ while(i <11){
 
 #this averages the test errors from the loop to find the overall test error
 kfoldtesterror = mean(testerror)
-print("Average error of the QDA method using 10-fold cross validation is")
-format(kfoldtesterror)
+print(paste0("Average error of the QDA method using 10-fold cross validation is "
+             ,round(kfoldtesterror, digits = 4)))
+
 
 ```
 
