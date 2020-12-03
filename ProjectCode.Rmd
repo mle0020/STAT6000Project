@@ -159,6 +159,10 @@ while(i <11){
   #quality are used as responses. We are predicting the quality based on 
   #the 0 and 1 method. It is also only fit on the training observations
   qda.fit = qda(Quality~. -quality, data=training)
+  print(paste0("QDA model for Test Set ",i))
+  print(qda.fit)
+  cat("\n")
+  cat("\n")
   #This line uses the built in predict function to figure out what
   #our model would predict for the test data.
   qda.predict = predict(qda.fit, testdata)$class
@@ -170,7 +174,9 @@ while(i <11){
 
 #this averages the test errors from the loop to find the overall test error
 kfoldtesterror = mean(testerror)
-kfoldtesterror
+print(paste0("Average error of the QDA method using 10-fold cross validation is "
+             ,round(kfoldtesterror, digits = 4)))
+
 
 ```
 
@@ -205,7 +211,7 @@ mean( wine.pred$class == wine.test$Quality )
 ```{r KNN}
 #Use the same trainset from above in order to maintain consistency.
 #Split the data into train and test to allow for kNN approach.
-#Perform kNN model with k=39 because 39 is sqrt of 1599 (typical approach to use k=sqrt(n)).
+#Perform kNN model with k=39 because 39 is sqrt of 1599 (typical approach to use k=sqrt(n)). 
 errors = NULL
 for (i in 1:10) {
   split <- data.frame(flds[i])
@@ -213,13 +219,60 @@ for (i in 1:10) {
   test <- wine[split,]
   train <- wine[-split,]
   wineTrain_Target <- train[,12]
-  knn.pred <- knn(train,test,wineTrain_Target,k=39)
-  errors[i] <- mean(knn.pred != test$Quality)
+  knn.pred1 <- knn(train,test,wineTrain_Target,k=39)
+  #Compute test errors for all folds.
+  errors[i] <- mean(knn.pred1 != test$Quality)
 }
-#Test model performance using test error.
-knn.test_error <- mean(errors)
-knn.test_error
 
+#Create a table to show actual vs predicted
+table(knn.pred1,test$Quality)
+#Compute mean test error.
+knn.test_error <- mean(errors)
+
+#Perform kNN again, with k=5 this time.
+errors2 = NULL
+for (i in 1:10) {
+  split <- data.frame(flds[i])
+  split <- as.vector(split[,1])
+  test <- wine[split,]
+  train <- wine[-split,]
+  wineTrain_Target <- train[,12]
+  knn.pred2 <- knn(train,test,wineTrain_Target,k=5)
+  #Compute errors across all folds.
+  errors2[i] <- mean(knn.pred2 != test$Quality)
+}
+
+#Create a table to show actual vs predicted
+table(knn.pred2,test$Quality)
+#Compute mean test error.
+knn.test_error2 <- mean(errors2)
+
+#Perform kNN with k=10
+errors3 = NULL
+for (i in 1:10) {
+  split <- data.frame(flds[i])
+  split <- as.vector(split[,1])
+  test <- wine[split,]
+  train <- wine[-split,]
+  wineTrain_Target <- train[,12]
+  knn.pred3 <- knn(train,test,wineTrain_Target,k=10)
+  #Compute errors across folds.
+  errors3[i] <- mean(knn.pred3 != test$Quality)
+}
+
+#Create a table to show actual vs predicted
+table(knn.pred3,test$Quality)
+#Compute mean test error.
+knn.test_error3 <- mean(errors3)
+
+#Plot the errors of each of the kNN models with different k values
+plot(errors,col="blue")
+lines(errors,col="blue")
+points(errors2,col="red")
+lines(errors2,col="red")
+points(errors3,col="green")
+lines(errors3,col="green")
+legend("topright",legend=c("k=39","k=5","k=10"),lty=c(1,1),col=c("blue","red","green"))
 ```
 
 
