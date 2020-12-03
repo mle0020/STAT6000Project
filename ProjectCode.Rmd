@@ -62,7 +62,7 @@ ggplot(data = winequality.red) +
 ```
 
 From the data page, it points out that the wine is good if its quality is larger than 6.5, then we create a new factor variable which will be used for our model response, if `quality` is bigger than 6.5, it is equal to 1, otherwise, it is 0.
-Moreover, we notice that the number of "bad" red wine is much more than the good ones, and it might influence our experiment.
+Moreover, we notice that the number of "bad" red wine is much more than the "good" ones, and it might influence our experiment.
 
 ```{r}
 winequality.red$Quality <- rep(0,dim(winequality.red)[1])
@@ -84,8 +84,7 @@ in different predictors, and it could be the reason for misclassification.
 
 par(mfrow=c(2,3))
 for (v in 1:11) {
-  boxplot(winequality.red[,v]~Quality,data = winequality.red,
-          ylab = colnames(winequality.red)[v] )
+  boxplot(wine[,v]~Quality,data = wine,ylab = colnames(wine)[v] )
 }
 ```
 
@@ -272,14 +271,14 @@ ggplot(rf.error,aes(x=m , y = error,color=sample,linetype=as.factor(average))) +
 
 ```
 
-Now, we build the forests again with m=4 and ntree=200 for each subsets, and compute the accuracy ((True Positive+True Negative)/Total) and the average accuracy. Moreover, the accuracy might be increased by removing some strongly uncorrelated predictors, and by checking the importance, we notice that `PH` and `free.sulfur.dioxide` are relatively less importance. Hence, we try to build the model without them and compute their accuracy. From the result, the model with all predictors is $0.9155464$; The model without `pH` is $0.9205621$;The model without `pH, free.sulfur.dioxide` is $0.9193042$; and The model without `free.sulfur.dioxide` is $0.9180503$. Thus, the forest without `pH` can slighly increase the accuracy and it's our final model.
+Now, we build the forests again with m=4 and ntree=200 for each subsets, and compute the accuracy ((True Positive+True Negative)/Total) and the average accuracy. Moreover, the accuracy might be increased by removing some strongly uncorrelated predictors, and by checking the importance, we notice that `PH` and `free.sulfur.dioxide` are relatively less importance. Hence, we try to build the model without them and compute their accuracy. From the result, the model with all predictors is $0.9155464$; The model without `pH` is $0.9186792$;The model without `pH, free.sulfur.dioxide` is $0.914945$; and The model without `free.sulfur.dioxide` is $0.9143239$. Thus, the forest without `pH` can slighly increase the accuracy and it's our final random forest model.
 
 ```{r}
 ###RF with m=4###
 accu<-matrix(NA,10,1)
 accu1<-matrix(NA,10,1)
-accu2<-matrix(NA,10,1)
-accu3<-matrix(NA,10,1)
+quality.table<-array(NA,c(2,2,10),dimnames =list(c("test.0","test.1"),c("predi.0","predi.1"),c(1:10)) )
+
 par(mfrow=c(2,5))
 for (i in 1:10) {
   split<-data.frame(flds[i])
@@ -294,6 +293,7 @@ for (i in 1:10) {
   varImpPlot(RF, sort = TRUE)
 }
 mean(accu)
+
 for (i in 1:10) {
   split<-data.frame(flds[i])
   split<-as.vector(split[,1])
@@ -301,32 +301,19 @@ for (i in 1:10) {
   y.test<-test[,12]
   x.test<- test[,-c(9,12)]
   train<-wine[-split,]
-  RF<-randomForest(formula = Quality ~ .-pH, data = train, xtest = x.test , ytest = y.test , ntree = 200, mtry=3)
-  accu1[i,]<-sum(test[,12]==RF$test$predicted)/length(test[,12]) #overall accuracy
+  RF<-randomForest(formula = Quality ~ .-pH, data = train, xtest = x.test , ytest = y.test , ntree = 200, mtry=4)
+  accu1[i,]<-sum(test[,12]==RF$test$predicted)/length(test[,12])
+  #overall accuracy
+  count<-table(test.set=test[,12],prediction=RF$test$predicted)
+  for (r in 1:2) {
+    for (c in 1:2) {
+      quality.table[r,c,i]<-count[r,c]
+    }
+
+  }
 }
 mean(accu1)
-for (i in 1:10) {
-  split<-data.frame(flds[i])
-  split<-as.vector(split[,1])
-  test<-wine[split,]
-  y.test<-test[,12]
-  x.test<- test[,-c(6,9,12)]
-  train<-wine[-split,]
-  RF<-randomForest(formula = Quality ~ .-pH-free.sulfur.dioxide, data = train, xtest = x.test , ytest = y.test , ntree = 200, mtry=3)
-  accu2[i,]<-sum(test[,12]==RF$test$predicted)/length(test[,12]) #overall accuracy
-}
-mean(accu2)
-for (i in 1:10) {
-  split<-data.frame(flds[i])
-  split<-as.vector(split[,1])
-  test<-wine[split,]
-  y.test<-test[,12]
-  x.test<- test[,-c(6,12)]
-  train<-wine[-split,]
-  RF<-randomForest(formula = Quality ~ .-free.sulfur.dioxide, data = train, xtest = x.test , ytest = y.test , ntree = 500, mtry=3)
-  accu3[i,]<-sum(test[,12]==RF$test$predicted)/length(test[,12]) #overall accuracy
-}
-mean(accu3)
+quality.table
 ```
 
 
