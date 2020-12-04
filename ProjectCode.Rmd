@@ -134,7 +134,7 @@ folds = list(fold1,fold2,fold3,fold4,fold5,fold6,fold7,fold8,fold9,fold10)
 ```
 
 
-# - Madison
+# QDA by Madison
 In this section, we will use the Quadratic Discriminant Analysis 
 classification method. We will be doing it with the resampling method
 of k-fold cross validation. Using a k = 10, we will fit the method 
@@ -181,7 +181,7 @@ print(paste0("Average error of the QDA method using 10-fold cross validation is 
 ```
 
 
-#LDA - Chung Ho
+#LDA by Chung Ho
 
 
 
